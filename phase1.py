@@ -1,7 +1,7 @@
 import argparse
 import requests
 import json
-from datetime import datetime
+import datetime
 
 
 def analyser_commande():
@@ -22,7 +22,10 @@ def analyser_commande():
     parser.add_argument("-f","--fin", help="Date recherchée la plus récente (format: AAAA-MM-JJ)")
     parser.add_argument("-v","--valeur", choices=["fermeture", "ouverture", "min", "max", "volume"], default = "fermeture", help="La valeur désiré (par défaut: fermeture)")
 
-       return parser.parse_args()
+    return parser.parse_args()
+
+analyser_commande()
+
 
 def produire_historique(symbole, début, fin, valeur):
     """
@@ -42,7 +45,7 @@ def produire_historique(symbole, début, fin, valeur):
     params = {'début': début, 'fin': fin}
     réponse = requests.get(url=url, params=params)
 
-     if réponse.status_code == 200:
+    if réponse.status_code == 200:
         historique = réponse.json().get('historique', {})
         if historique:
             # Manipulez l'historique selon la valeur désirée et retournez la liste de tuples (date, valeur)
