@@ -1,7 +1,7 @@
 import argparse
 import requests
 import json
-import datetime
+from datetime import datetime
 
 
 def analyser_commande():
@@ -15,17 +15,13 @@ def analyser_commande():
         symboles à traiter, et les attributs «début», «fin» et «valeur»
         associés aux arguments optionnels de la ligne de commande.
     """
-    parser =argparse.ArgumentParser(description="Extraction de valeurs historiques pour un ou plusieurs symboles boursiers.")
+    parser= argparse.ArgumentParser(description="Extraction de valeurs historiques pour un ou plusieurs symboles boursiers.")
 
-    parser.add_argument("symbole", nargs = "+", help="Le nom du symbole boursier")
+    parser.add_argument("symbole", help="Le nom du symbole boursier")
     parser.add_argument("-d","--début", help="Date recherchée la plus ancienne (format: AAAA-MM-JJ)")
     parser.add_argument("-f","--fin", help="Date recherchée la plus récente (format: AAAA-MM-JJ)")
-    parser.add_argument("-v","--valeur", choices=["fermeture", "ouverture", "min", "max", "volume"], default = "fermeture", help="La valeur désiré (par défaut: fermeture)")
-
+    parser.add_argument("-v","--valeur", choices=["fermeture", "ouverture", "min", "max", "volume"], default= "fermeture", help="La valeur désiré (par défaut: fermeture)")
     return parser.parse_args()
-
-analyser_commande()
-
 
 def produire_historique(symbole, début, fin, valeur):
     """
@@ -43,29 +39,28 @@ def produire_historique(symbole, début, fin, valeur):
 
     url = f'https://pax.ulaval.ca/action/{symbole}/historique/'
     params = {'début': début, 'fin': fin}
+
     réponse = requests.get(url=url, params=params)
 
     if réponse.status_code == 200:
-        historique = réponse.json().get('historique', {})
+        historique = réponse.json().get('historique', [])
         if historique:
             # Manipulez l'historique selon la valeur désirée et retournez la liste de tuples (date, valeur)
-            # ...
-            return historique
+            valeurs = [(entry['date'], entry[valeur]) for entry in historique]
+            return valeurs
         else:
-            print(f"Aucun historique trouvé pour le symbole {symbole} dans la période spécifiée.")
+            print(f"Aucun historique a été trouvé pour le symbole {symbole} dans la période indiquée.")
     else:
         print(f"Échec de la requête pour le symbole {symbole}. Code d'erreur : {réponse.status_code}")
 
 if __name__ == "__main__":
     args = analyser_commande()
 
-    for symbole in args.symboles:
-        début = args.début if args.début else datetime.now().strftime('%Y-%m-%d')
-        fin = args.fin if args.fin else datetime.now().strftime('%Y-%m-%d')
+    début = args.début if args.début else datetime.now().strftime('%Y-%m-%d')
+    fin = args.fin if args.fin else datetime.now().strftime('%Y-%m-%d')
 
-        historique = produire_historique(symbole, début, fin, args.valeur)
+    historique = produire_historique(args.symbole, début, fin, args.valeur)
 
-        # Format de l'affichage
-        print(f"titre={symbole}: valeur={args.valeur}, début={début}, fin={fin}")
-        print(historique)
-        print()
+    # Format de l'affichage
+    print(f"titre={args.symbole}: valeur={args.valeur}, début={début}, fin={fin}")
+    print(historique)
